@@ -1,0 +1,7 @@
+{% extends 'map.html' %}
+
+{% block content %}
+  {% for r in reports %}
+    <p>{{ r.error_desc }} | {{ r.device_id }} | {{ r.time_str }}</p>
+  {% endfor %}
+{% endblock %}

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Map</title>
+	<meta charset="utf8"/>
+</head>
+<body>
+
+<div id="map" style="width: 900px; height: 800px;"></div>
+
+<div id="reports">
+
+</div>
+
+{% block content %}
+{% endblock %}
+
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='scripts/jq.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='scripts/map.js') }}"></script>
+</body>
+</html>
