@@ -10,3 +10,4 @@ That works without headers, cookies and others security.
 2. Fix getting location
 3. Pack app into Safari container
 4. Add method to adjust center of screen to current location
+5. (!) Remove old route on creating new one
