@@ -3,11 +3,12 @@
 <head>
 	<title>Map</title>
 	<meta charset="utf8"/>
+	<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
 </head>
 <body>
 
-<div id="map" style="width: 100%; height: 800px;"></div>
+<div id="map" style="width: 100%; min-height:600px; height: 100%;"></div>
 
 <div id="routeInfo" class="text-center" style="background: #fff;
     position: fixed;
