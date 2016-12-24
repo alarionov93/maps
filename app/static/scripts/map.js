@@ -5,6 +5,24 @@ function Point(id, header, gasTypes, lat, lon) {
     this.lat = parseFloat(lat);
     this.lon = parseFloat(lon);
 }
+CURR_POS_POINT_ID = 7
+// points = [];
+var t = setTimeout(function () {
+    curCoords = getCurrentLocation(); //getCurrentLocation
+    // var point = new Point(7, "Текущее местоположение", "", curCoords[0], curCoords[1]);
+    // drawPts(point);
+    // myMap.geoObjects.add(pts);
+    myMap.setCenter(curCoords);
+    myMap.setZoom(10);
+}, 1500);
+
+function adjustMap() {
+    var point = new Point(CURR_POS_POINT_ID, "Текущее местоположение", "", curCoords[0], curCoords[1]);
+    var pts = drawPts(point);
+    myMap.geoObjects.add(pts);
+    myMap.setCenter(curCoords);
+    myMap.setZoom(10);
+}
 
 (function(){
 	ymaps.ready(init);
@@ -13,7 +31,7 @@ function Point(id, header, gasTypes, lat, lon) {
     function init() {
     	myMap = new ymaps.Map("map", {
     		center: [58.010259, 56.234195],
-    		zoom: 5
+    		zoom: 8
     	}, {
     		autoFitToViewport: 'always'
     	}, {
@@ -28,9 +46,9 @@ function Point(id, header, gasTypes, lat, lon) {
                 console.log(resp);
                 var pts;
                 var point;
-                for (var i = 0; i < resp.Stations.length; i++) {
-                    point = new Point(i, resp["Stations"][i]["a"], resp["Stations"][i]["f"],
-                        resp["Stations"][i]["y"], resp["Stations"][i]["x"]);
+                for (var i = 0; i < resp["GasStations"].length; i++) {
+                    point = new Point(i, resp["GasStations"][i]["DisplayName"], resp["GasStations"][i]["GasStationId"],
+                        resp["GasStations"][i]["Latitude"], resp["GasStations"][i]["Longitude"]);
                     // pts = drawPts(point);
                     // myMap.geoObjects.add(pts);
                     points.push(point);
@@ -40,7 +58,9 @@ function Point(id, header, gasTypes, lat, lon) {
                     // Получение ссылки на дочерний объект, на котором произошло событие.
                     var point = e.get('target');
                     var coords = point.geometry._coordinates;
+                    // if (point.id != CURR_POS_POINT_ID) {
                     getRoute(coords, false);
+                    // }
                     // for (var i = 0; i < myMap.geoObjects.length; i++) {
                     //     if(myMap.geoObjects[i] !== point) {
                     //         myMap.geoObjects[i].setOptions('visible', false);
@@ -72,7 +92,7 @@ function drawPts(point) {
         properties: {
             // Контент метки.
             iconContent: point.id,
-            balloonContent: point.header + " (" + point.gasTypes + ")"
+            balloonContent: point.header
         }
     }, {
         // Опции.
@@ -91,7 +111,7 @@ function drawPts(point) {
  */
 function getRoute(to, from) {
     if (!from) {
-        curCoords = getLocation(); //getCurrentLocation
+
         if (curCoords) {
             from = curCoords;
         } else {
@@ -169,58 +189,58 @@ function showRouteData(data) {
  * @param pts [[lat, lon], [lat, lon]]
  */
 function clusterize(pts) {
+    /**
+     * Создадим кластеризатор, вызвав функцию-конструктор.
+     * Список всех опций доступен в документации.
+     * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/Clusterer.xml#constructor-summary
+     */
+        clusterer = new ymaps.Clusterer({
         /**
-         * Создадим кластеризатор, вызвав функцию-конструктор.
-         * Список всех опций доступен в документации.
-         * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/Clusterer.xml#constructor-summary
+         * Через кластеризатор можно указать только стили кластеров,
+         * стили для меток нужно назначать каждой метке отдельно.
+         * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/option.presetStorage.xml
          */
-            clusterer = new ymaps.Clusterer({
-            /**
-             * Через кластеризатор можно указать только стили кластеров,
-             * стили для меток нужно назначать каждой метке отдельно.
-             * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/option.presetStorage.xml
-             */
-            preset: 'islands#invertedVioletClusterIcons',
-            /**
-             * Ставим true, если хотим кластеризовать только точки с одинаковыми координатами.
-             */
-            groupByCoordinates: false,
-            /**
-             * Опции кластеров указываем в кластеризаторе с префиксом "cluster".
-             * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/ClusterPlacemark.xml
-             */
-            clusterDisableClickZoom: true,
-            clusterHideIconOnBalloonOpen: false,
-            geoObjectHideIconOnBalloonOpen: false
-        }),
+        preset: 'islands#invertedVioletClusterIcons',
         /**
-         * Функция возвращает объект, содержащий данные метки.
-         * Поле данных clusterCaption будет отображено в списке геообъектов в балуне кластера.
-         * Поле balloonContentBody - источник данных для контента балуна.
-         * Оба поля поддерживают HTML-разметку.
-         * Список полей данных, которые используют стандартные макеты содержимого иконки метки
-         * и балуна геообъектов, можно посмотреть в документации.
-         * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/GeoObject.xml
-         * data = {id: 1, header: 'txt'}
+         * Ставим true, если хотим кластеризовать только точки с одинаковыми координатами.
          */
-            getPointData = function (data) {
-            return {
-                balloonContentBody: '<strong> ' + data.header + '</strong>',
-                clusterCaption: '<strong>' + data.id + '</strong>'
-            };
-        },
+        groupByCoordinates: false,
         /**
-         * Функция возвращает объект, содержащий опции метки.
-         * Все опции, которые поддерживают геообъекты, можно посмотреть в документации.
-         * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/GeoObject.xml
+         * Опции кластеров указываем в кластеризаторе с префиксом "cluster".
+         * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/ClusterPlacemark.xml
          */
-            getPointOptions = function () {
-            return {
-                preset: 'islands#violetIcon'
-            };
-        },
-        points = pts,
-        geoObjects = [];
+        clusterDisableClickZoom: true,
+        clusterHideIconOnBalloonOpen: false,
+        geoObjectHideIconOnBalloonOpen: false
+    }),
+    /**
+     * Функция возвращает объект, содержащий данные метки.
+     * Поле данных clusterCaption будет отображено в списке геообъектов в балуне кластера.
+     * Поле balloonContentBody - источник данных для контента балуна.
+     * Оба поля поддерживают HTML-разметку.
+     * Список полей данных, которые используют стандартные макеты содержимого иконки метки
+     * и балуна геообъектов, можно посмотреть в документации.
+     * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/GeoObject.xml
+     * data = {id: 1, header: 'txt'}
+     */
+        getPointData = function (data) {
+        return {
+            balloonContentBody: '<strong> ' + data.header + '</strong>',
+            clusterCaption: '<strong>' + data.id + '</strong>'
+        };
+    },
+    /**
+     * Функция возвращает объект, содержащий опции метки.
+     * Все опции, которые поддерживают геообъекты, можно посмотреть в документации.
+     * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/GeoObject.xml
+     */
+        getPointOptions = function () {
+        return {
+            preset: 'islands#violetIcon'
+        };
+    },
+    points = pts,
+    geoObjects = [];
 
     /**
      * Данные передаются вторым параметром в конструктор метки, опции - третьим.
@@ -254,20 +274,20 @@ function clusterize(pts) {
         checkZoomRange: true
     });
 }
-function getLocation() {
-    function getCurrentLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(getCoords);
-        } else {
-            console.error("Geolocation is not supported by this browser.");
-        }
+function getCurrentLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(getCoords);
+    } else {
+        console.error("Geolocation is not supported by this browser.");
     }
+}
 
-    function getCoords(position) {
-        var curCoords = [
-            parseFloat(position.coords.latitude),
-            parseFloat(position.coords.longitude)
-        ];
-        return curCoords;
-    }
+function getCoords(position) {
+    var cur = [
+        parseFloat(position.coords.latitude),
+        parseFloat(position.coords.longitude)
+    ];
+    console.log(position);
+    curCoords = cur;
+    return cur;
 }
